@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Optimizer AI — ZROSTACK</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Mono&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--bg4:#22222f;
+  --fg:#f0f0f8;--fg2:#a0a0b8;--fg3:#606078;
+  --border:#2a2a3a;--border2:#3a3a50;
+  --purple:#7c6ff7;--purple-bg:#1e1a3a;--purple-light:#a89dff;
+  --teal:#2dd4bf;--teal-bg:#0d2d2a;
+  --amber:#f59e0b;--amber-bg:#2a200a;
+  --green:#22c55e;--green-bg:#0a2a15;
+  --red:#ef4444;--red-bg:#2a0a0a;
+  --blue:#3b82f6;--blue-bg:#0a1628;
+  --pink:#ec4899;--pink-bg:#2a0a1a;
+  --r:10px;--rl:16px;
+  font-family:'DM Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--fg);min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:12px 18px;font-size:13px;z-index:9999;opacity:0;transition:all 0.3s;transform:translateY(10px);max-width:320px}
+.toast.show{opacity:1;transform:translateY(0)}
+/* NAV */
+nav{padding:14px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;background:rgba(10,10,15,0.9);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.nav-back{font-size:13px;color:var(--fg3);cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:6px}
+.nav-back:hover{color:var(--fg)}
+.nav-logo{font-size:16px;font-weight:700}
+.nav-logo span{color:var(--purple)}
+.nav-title{font-size:14px;color:var(--fg2);border-left:1px solid var(--border);padding-left:14px;margin-left:4px}
+.status-pill{margin-left:auto;font-size:11px;padding:3px 10px;border-radius:99px;background:var(--green-bg);color:var(--green);border:1px solid rgba(34,197,94,0.2)}
+/* LAYOUT */
+#app{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 57px)}
+/* SIDEBAR */
+#sidebar{border-right:1px solid var(--border);padding:20px 12px;background:var(--bg2);position:sticky;top:57px;height:calc(100vh - 57px);overflow-y:auto}
+.sb-section{font-size:10px;font-weight:500;color:var(--fg3);padding:8px 10px 4px;text-transform:uppercase;letter-spacing:0.08em;margin-top:8px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--fg2);transition:all 0.15s;margin-bottom:2px;border:1px solid transparent}
+.sb-item:hover{background:var(--bg3);color:var(--fg)}
+.sb-item.active{background:var(--purple-bg);color:var(--purple-light);border-color:rgba(124,111,247,0.2)}
+.sb-item.done{color:var(--green)}
+.sb-item.done .sb-icon{color:var(--green)}
+.sb-item.running .sb-icon{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sb-icon{font-size:16px;flex-shrink:0}
+.sb-badge{margin-left:auto;font-size:10px;padding:1px 6px;border-radius:99px}
+.badge-ready{background:var(--green-bg);color:var(--green)}
+.badge-run{background:var(--purple-bg);color:var(--purple-light)}
+.badge-wait{background:var(--bg3);color:var(--fg3)}
+/* MAIN */
+#main{padding:28px;overflow-y:auto;max-height:calc(100vh - 57px)}
+.section{display:none}.section.active{display:block}
+/* INTAKE */
+.intake-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.intake-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:20px}
+.intake-card h3{font-size:13px;font-weight:500;color:var(--fg2);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.field{margin-bottom:12px}
+.field label{font-size:12px;color:var(--fg3);display:block;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;font-size:13px;padding:9px 12px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg3);color:var(--fg);font-family:inherit;transition:border-color 0.15s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--purple)}
+.field textarea{resize:vertical;min-height:72px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{font-size:13px;padding:8px 16px;border-radius:var(--r);border:1px solid var(--border2);background:transparent;color:var(--fg);cursor:pointer;font-family:inherit;transition:all 0.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--purple);color:var(--purple-light)}
+.btn.primary{background:var(--purple);border-color:var(--purple);color:#fff}
+.btn.primary:hover{background:var(--purple-light)}
+.btn.teal{background:var(--teal);border-color:var(--teal);color:#0a0a0f}
+.btn.sm{font-size:12px;padding:5px 12px}
+/* AGENT CARDS */
+.agent-header{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+.agent-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.agent-meta h2{font-size:18px;font-weight:700;margin-bottom:3px}
+.agent-meta p{font-size:13px;color:var(--fg3)}
+.result-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:20px;margin-bottom:16px}
+.result-box h4{font-size:12px;font-weight:500;color:var(--fg3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.result-content{font-size:13px;line-height:1.8;color:var(--fg2);white-space:pre-wrap}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.metric-card{background:var(--bg3);border-radius:var(--r);padding:14px;border:1px solid var(--border)}
+.metric-card .m-label{font-size:11px;color:var(--fg3);margin-bottom:4px}
+.metric-card .m-val{font-size:20px;font-weight:700}
+.metric-card .m-sub{font-size:11px;margin-top:3px}
+.opp-item{display:flex;gap:12px;padding:12px 14px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border);margin-bottom:8px;align-items:flex-start}
+.opp-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.opp-body .opp-title{font-size:13px;font-weight:500;margin-bottom:3px}
+.opp-body .opp-desc{font-size:12px;color:var(--fg3);line-height:1.5}
+.opp-body .opp-impact{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;display:inline-block;margin-top:5px}
+.impact-high{background:var(--green-bg);color:var(--green)}
+.impact-med{background:var(--amber-bg);color:var(--amber)}
+.impact-low{background:var(--bg4);color:var(--fg3)}
+/* PROGRESS */
+.agent-progress{background:var(--bg2);border:1px solid var(--purple);border-radius:var(--rl);padding:20px;margin-bottom:20px}
+.agent-progress .ap-title{font-size:14px;font-weight:500;color:var(--purple-light);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.ap-log{font-size:12px;color:var(--fg3);font-family:'DM Mono',monospace;line-height:2;max-height:120px;overflow-y:auto}
+.ap-log .log-line{display:flex;align-items:center;gap:8px}
+.ap-log .log-line.done{color:var(--green)}
+.ap-log .log-line.active{color:var(--purple-light)}
+/* REPORT */
+.report-section{margin-bottom:24px}
+.report-section h3{font-size:15px;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.tag{font-size:10px;padding:2px 8px;border-radius:99px;font-weight:500;display:inline-block}
+.tag.green{background:var(--green-bg);color:var(--green)}
+.tag.amber{background:var(--amber-bg);color:var(--amber)}
+.tag.red{background:var(--red-bg);color:var(--red)}
+.tag.purple{background:var(--purple-bg);color:var(--purple-light)}
+.tag.blue{background:var(--blue-bg);color:var(--blue)}
+/* LOADING */
+@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
+.thinking{color:var(--purple-light);font-size:13px;display:flex;align-items:center;gap:8px;padding:16px 0}
+.thinking::before{content:'✦';animation:pulse 1.5s infinite}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<nav>
+  <a class="nav-back" href="index.html">← ZROSTACK</a>
+  <div class="nav-logo">ZRO<span>STACK</span></div>
+  <div class="nav-title">Business Optimizer AI</div>
+  <div class="status-pill" id="status-pill">Ready</div>
+</nav>
+
+<div id="app">
+  <div id="sidebar">
+    <div class="sb-section">Setup</div>
+    <div class="sb-item active" data-s="intake" onclick="goSection('intake')">
+      <span class="sb-icon">📋</span> Business intake
+      <span class="sb-badge badge-ready" id="badge-intake">Start</span>
+    </div>
+
+    <div class="sb-section">AI Agents</div>
+    <div class="sb-item" data-s="market" onclick="goSection('market')">
+      <span class="sb-icon">🌍</span> Market intelligence
+      <span class="sb-badge badge-wait" id="badge-market">Waiting</span>
+    </div>
+    <div class="sb-item" data-s="supply" onclick="goSection('supply')">
+      <span class="sb-icon">🔗</span> Supply chain audit
+      <span class="sb-badge badge-wait" id="badge-supply">Waiting</span>
+    </div>
+    <div class="sb-item" data-s="cost" onclick="goSection('cost')">
+      <span class="sb-icon">💰</span> Cost benchmarking
+      <span class="sb-badge badge-wait" id="badge-cost">Waiting</span>
+    </div>
+    <div class="sb-item" data-s="logistics" onclick="goSection('logistics')">
+      <span class="sb-icon">🚢</span> Logistics & compliance
+      <span class="sb-badge badge-wait" id="badge-logistics">Waiting</span>
+    </div>
+    <div class="sb-item" data-s="growth" onclick="goSection('growth')">
+      <span class="sb-icon">🚀</span> Growth & marketing
+      <span class="sb-badge badge-wait" id="badge-growth">Waiting</span>
+    </div>
+
+    <div class="sb-section">Output</div>
+    <div class="sb-item" data-s="report" onclick="goSection('report')">
+      <span class="sb-icon">📄</span> Full report
+      <span class="sb-badge badge-wait" id="badge-report">Pending</span>
+    </div>
+
+    <div style="margin-top:20px;padding:12px;background:var(--purple-bg);border-radius:var(--r);border:1px solid rgba(124,111,247,0.2)">
+      <div style="font-size:11px;color:var(--purple-light);font-weight:500;margin-bottom:6px">✦ COO Agent</div>
+      <div style="font-size:11px;color:var(--fg3);line-height:1.6" id="coo-status">Waiting for business data to begin analysis…</div>
+    </div>
+  </div>
+
+  <div id="main">
+
+    <!-- INTAKE -->
+    <div class="section active" id="s-intake">
+      <div style="margin-bottom:24px">
+        <h1 style="font-size:24px;font-weight:700;margin-bottom:6px">Business intake</h1>
+        <p style="font-size:14px;color:var(--fg3)">Tell the COO agent about your business. The more detail, the sharper the analysis.</p>
+      </div>
+
+      <div class="intake-grid">
+        <div class="intake-card">
+          <h3>🏢 Business overview</h3>
+          <div class="field"><label>Business name</label><input type="text" id="i-name" placeholder="e.g. Al-Nour Trading Co."></div>
+          <div class="field-row">
+            <div class="field"><label>Industry</label>
+              <select id="i-industry">
+                <option>F&B / Food import</option><option>Fashion / Apparel</option><option>Electronics</option><option>Cosmetics / Beauty</option><option>Home goods</option><option>Supplements / Health</option><option>Industrial / B2B</option><option>Retail / E-commerce</option><option>Technology</option><option>Other</option>
+              </select>
+            </div>
+            <div class="field"><label>Current market</label>
+              <select id="i-market">
+                <option>Lebanon</option><option>UAE</option><option>Saudi Arabia</option><option>Kuwait</option><option>Qatar</option><option>Egypt</option><option>Jordan</option><option>MENA (multi)</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label>Target expansion markets</label>
+            <select id="i-expansion">
+              <option>GCC (KSA, UAE, Kuwait, Qatar)</option><option>Europe</option><option>USA / North America</option><option>Africa</option><option>Asia</option><option>Stay in current market</option>
+            </select>
+          </div>
+          <div class="field"><label>Monthly revenue (USD)</label><input type="number" id="i-revenue" placeholder="e.g. 50000"></div>
+          <div class="field"><label>Main product / service</label><input type="text" id="i-product" placeholder="e.g. Imported olive oil from Spain"></div>
+        </div>
+
+        <div class="intake-card">
+          <h3>🔗 Supply chain & costs</h3>
+          <div class="field"><label>Current supplier(s)</label><input type="text" id="i-supplier" placeholder="e.g. Spanish producer, 3 Lebanese distributors"></div>
+          <div class="field-row">
+            <div class="field"><label>Unit cost (USD)</label><input type="number" id="i-unit-cost" placeholder="e.g. 8.50"></div>
+            <div class="field"><label>Selling price (USD)</label><input type="number" id="i-sell-price" placeholder="e.g. 22"></div>
+          </div>
+          <div class="field"><label>Monthly order quantity (MOQ)</label><input type="number" id="i-moq" placeholder="e.g. 500 units"></div>
+          <div class="field"><label>Biggest cost challenge</label>
+            <select id="i-challenge">
+              <option>High supplier prices</option><option>Shipping / logistics costs</option><option>Customs / duties</option><option>Payment terms too short</option><option>Currency risk (LBP/USD)</option><option>Low margins overall</option>
+            </select>
+          </div>
+          <div class="field"><label>Current marketing channels</label>
+            <select id="i-marketing">
+              <option>Instagram + WhatsApp</option><option>Shopify / e-commerce</option><option>Physical retail only</option><option>B2B direct sales</option><option>Multi-channel</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="intake-card" style="margin-bottom:20px">
+        <h3>🎯 Goals & context</h3>
+        <div class="field"><label>What do you want to optimize? (be specific)</label>
+          <textarea id="i-goals" placeholder="e.g. We import olive oil from Spain and sell to Lebanese restaurants. Our margin is 30% but we know competitors pay less. We want to find cheaper suppliers in Turkey or Italy, cut shipping costs, and start selling to UAE. Monthly revenue is $40,000 but we want to reach $100,000 in 12 months."></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Biggest competitor</label><input type="text" id="i-competitor" placeholder="e.g. Chtaura Park Foods"></div>
+          <div class="field"><label>Your key advantage</label><input type="text" id="i-advantage" placeholder="e.g. Premium quality, direct farm relationships"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn teal" style="font-size:15px;padding:12px 28px;border-radius:12px" onclick="runAllAgents()">
+          ✦ Launch all 5 AI agents
+        </button>
+        <span style="font-size:13px;color:var(--fg3)">~2 minutes · Full optimization report</span>
+      </div>
+    </div>
+
+    <!-- MARKET INTELLIGENCE -->
+    <div class="section" id="s-market">
+      <div class="agent-header">
+        <div class="agent-icon" style="background:var(--blue-bg)">🌍</div>
+        <div class="agent-meta">
+          <h2>Market Intelligence Agent</h2>
+          <p>Competitive analysis · Trend signals · Secondary niches · Consumer behavior shifts</p>
+        </div>
+      </div>
+      <div id="market-progress" style="display:none" class="agent-progress">
+        <div class="ap-title">⟳ Agent running…</div>
+        <div class="ap-log" id="market-log"></div>
+      </div>
+      <div id="market-result" style="display:none"></div>
+      <div id="market-placeholder" class="thinking">Waiting for business data — fill intake form and launch agents</div>
+    </div>
+
+    <!-- SUPPLY CHAIN -->
+    <div class="section" id="s-supply">
+      <div class="agent-header">
+        <div class="agent-icon" style="background:var(--teal-bg)">🔗</div>
+        <div class="agent-meta">
+          <h2>Supply Chain Sourcing Agent</h2>
+          <p>Supplier audit · Alternative sourcing · Alibaba/1688 benchmarks · Backup suppliers</p>
+        </div>
+      </div>
+      <div id="supply-progress" style="display:none" class="agent-progress">
+        <div class="ap-title">⟳ Agent running…</div>
+        <div class="ap-log" id="supply-log"></div>
+      </div>
+      <div id="supply-result" style="display:none"></div>
+      <div id="supply-placeholder" class="thinking">Waiting for business data — fill intake form and launch agents</div>
+    </div>
+
+    <!-- COST BENCHMARKING -->
+    <div class="section" id="s-cost">
+      <div class="agent-header">
+        <div class="agent-icon" style="background:var(--amber-bg)">💰</div>
+        <div class="agent-meta">
+          <h2>Cost Benchmarking & Margin Maximizer</h2>
+          <p>Unit economics · Shadow negotiation · MOQ optimization · Margin improvement</p>
+        </div>
+      </div>
+      <div id="cost-progress" style="display:none" class="agent-progress">
+        <div class="ap-title">⟳ Agent running…</div>
+        <div class="ap-log" id="cost-log"></div>
+      </div>
+      <div id="cost-result" style="display:none"></div>
+      <div id="cost-placeholder" class="thinking">Waiting for business data — fill intake form and launch agents</div>
+    </div>
+
+    <!-- LOGISTICS -->
+    <div class="section" id="s-logistics">
+      <div class="agent-header">
+        <div class="agent-icon" style="background:var(--green-bg)">🚢</div>
+        <div class="agent-meta">
+          <h2>Global Logistics & Compliance Auditor</h2>
+          <p>Shipping optimization · Customs frameworks · Regulatory compliance · International expansion</p>
+        </div>
+      </div>
+      <div id="logistics-progress" style="display:none" class="agent-progress">
+        <div class="ap-title">⟳ Agent running…</div>
+        <div class="ap-log" id="logistics-log"></div>
+      </div>
+      <div id="logistics-result" style="display:none"></div>
+      <div id="logistics-placeholder" class="thinking">Waiting for business data — fill intake form and launch agents</div>
+    </div>
+
+    <!-- GROWTH -->
+    <div class="section" id="s-growth">
+      <div class="agent-header">
+        <div class="agent-icon" style="background:var(--pink-bg)">🚀</div>
+        <div class="agent-meta">
+          <h2>Growth Marketing & Funnel Automator</h2>
+          <p>Ad creative · Email flows · Social outreach · Conversion optimization · New customer cohorts</p>
+        </div>
+      </div>
+      <div id="growth-progress" style="display:none" class="agent-progress">
+        <div class="ap-title">⟳ Agent running…</div>
+        <div class="ap-log" id="growth-log"></div>
+      </div>
+      <div id="growth-result" style="display:none"></div>
+      <div id="growth-placeholder" class="thinking">Waiting for business data — fill intake form and launch agents</div>
+    </div>
+
+    <!-- FULL REPORT -->
+    <div class="section" id="s-report">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+        <div>
+          <h1 style="font-size:24px;font-weight:700;margin-bottom:4px">Full optimization report</h1>
+          <p style="font-size:13px;color:var(--fg3)" id="report-subtitle">Generated by 5 AI agents</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" onclick="copyReport()">📋 Copy</button>
+          <button class="btn sm primary" onclick="window.print()">🖨 Print / PDF</button>
+        </div>
+      </div>
+      <div id="report-body">
+        <div class="thinking">Run all 5 agents to generate the full report</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const AGENTS = ['market','supply','cost','logistics','growth'];
+let bizData = {};
+let results = {};
+let agentsCompleted = 0;
+
+function toast(msg, dur=2500){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+function goSection(s){
+  document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('s-'+s).classList.add('active');
+  document.querySelector('[data-s="'+s+'"]').classList.add('active');
+}
+
+function getBizData(){
+  return {
+    name: document.getElementById('i-name').value || 'My Business',
+    industry: document.getElementById('i-industry').value,
+    market: document.getElementById('i-market').value,
+    expansion: document.getElementById('i-expansion').value,
+    revenue: document.getElementById('i-revenue').value || '50000',
+    product: document.getElementById('i-product').value || 'General products',
+    supplier: document.getElementById('i-supplier').value || 'Various suppliers',
+    unitCost: document.getElementById('i-unit-cost').value || '10',
+    sellPrice: document.getElementById('i-sell-price').value || '25',
+    moq: document.getElementById('i-moq').value || '100',
+    challenge: document.getElementById('i-challenge').value,
+    marketing: document.getElementById('i-marketing').value,
+    goals: document.getElementById('i-goals').value || 'Optimize costs and grow revenue',
+    competitor: document.getElementById('i-competitor').value || 'Local competitors',
+    advantage: document.getElementById('i-advantage').value || 'Quality and service',
+  };
+}
+
+async function callAI(prompt) {
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, maxTokens: 600 }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Network error' }));
+    throw new Error(err.error || 'API error');
+  }
+  const data = await res.json();
+  return data.text || '';
+}
+
+function addLog(agentId, line, done = false) {
+  const log = document.getElementById(agentId + '-log');
+  if (!log) return;
+  const div = document.createElement('div');
+  div.className = 'log-line ' + (done ? 'done' : 'active');
+  div.textContent = (done ? '✓ ' : '→ ') + line;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function showProgress(agentId) {
+  document.getElementById(agentId + '-progress').style.display = 'block';
+  document.getElementById(agentId + '-placeholder').style.display = 'none';
+}
+
+function setBadge(agentId, text, cls) {
+  const el = document.getElementById('badge-' + agentId);
+  el.textContent = text;
+  el.className = 'sb-badge badge-' + cls;
+}
+
+function renderAgentResult(agentId, title, icon, color, content, metrics, opps) {
+  const el = document.getElementById(agentId + '-result');
+  el.style.display = 'block';
+  document.getElementById(agentId + '-progress').style.display = 'none';
+
+  const metricsHtml = metrics ? `<div class="metric-grid">${metrics.map(m=>`
+    <div class="metric-card">
+      <div class="m-label">${m.label}</div>
+      <div class="m-val" style="color:${m.color||'var(--fg)'}">${m.val}</div>
+      ${m.sub ? `<div class="m-sub" style="color:${m.subColor||'var(--fg3)'}">${m.sub}</div>` : ''}
+    </div>`).join('')}</div>` : '';
+
+  const oppsHtml = opps ? opps.map(o=>`
+    <div class="opp-item">
+      <div class="opp-icon">${o.icon}</div>
+      <div class="opp-body">
+        <div class="opp-title">${o.title}</div>
+        <div class="opp-desc">${o.desc}</div>
+        <span class="opp-impact impact-${o.impact}">${o.impact === 'high' ? '🔥 High impact' : o.impact === 'med' ? '⚡ Medium impact' : '✓ Quick win'}</span>
+      </div>
+    </div>`).join('') : '';
+
+  el.innerHTML = `
+    ${metricsHtml}
+    <div class="result-box">
+      <h4>${icon} AI analysis</h4>
+      <div class="result-content">${content}</div>
+    </div>
+    ${opps ? `<div class="result-box"><h4>💡 Opportunities identified</h4>${oppsHtml}</div>` : ''}
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn sm" onclick="navigator.clipboard.writeText(document.querySelector('#${agentId}-result .result-content').textContent).then(()=>toast('✓ Copied!'))">📋 Copy analysis</button>
+      <button class="btn sm primary" onclick="goSection('${agentId === 'growth' ? 'report' : AGENTS[AGENTS.indexOf('${agentId}')+1] || 'report'}')">Next agent →</button>
+    </div>`;
+}
+
+async function runAgent(agentId, prompt, logs, metrics, opps) {
+  setBadge(agentId, 'Running', 'run');
+  document.querySelector('[data-s="'+agentId+'"]').classList.add('running');
+  showProgress(agentId);
+  goSection(agentId);
+  document.getElementById('coo-status').textContent = 'Running ' + agentId + ' agent…';
+
+  for (let i = 0; i < logs.length; i++) {
+    await new Promise(r => setTimeout(r, 600));
+    if (i > 0) {
+      const prev = document.getElementById(agentId + '-log').children[i - 1];
+      if (prev) { prev.className = 'log-line done'; prev.textContent = '✓ ' + logs[i-1]; }
+    }
+    addLog(agentId, logs[i]);
+  }
+
+  let content = '';
+  try {
+    content = await callAI(prompt);
+  } catch (e) {
+    content = 'AI analysis unavailable — add ANTHROPIC_API_KEY to Vercel environment variables.\n\nManual analysis: Based on your inputs, focus on ' + prompt.slice(0, 100) + '…';
+  }
+
+  // Mark last log done
+  const logEl = document.getElementById(agentId + '-log');
+  if (logEl.lastChild) {
+    logEl.lastChild.className = 'log-line done';
+    logEl.lastChild.textContent = '✓ ' + logs[logs.length - 1];
+  }
+
+  results[agentId] = content;
+  renderAgentResult(agentId, agentId, '✦', '', content, metrics, opps);
+  setBadge(agentId, 'Done ✓', 'ready');
+  document.querySelector('[data-s="'+agentId+'"]').classList.remove('running');
+  document.querySelector('[data-s="'+agentId+'"]').classList.add('done');
+  agentsCompleted++;
+
+  if (agentsCompleted === 5) {
+    buildReport();
+    setBadge('report', 'Ready ✓', 'ready');
+    document.getElementById('status-pill').textContent = '✓ Analysis complete';
+    document.getElementById('status-pill').style.background = 'var(--green-bg)';
+    document.getElementById('coo-status').textContent = 'All 5 agents complete. Full report ready.';
+    toast('✓ All agents complete — full report ready!', 3500);
+    goSection('report');
+  }
+}
+
+async function runAllAgents() {
+  bizData = getBizData();
+  agentsCompleted = 0;
+  results = {};
+
+  if (!bizData.product || bizData.product === 'General products') {
+    toast('Please fill in at least your product and business name');
+    return;
+  }
+
+  document.getElementById('status-pill').textContent = '⟳ Running 5 agents…';
+  document.getElementById('coo-status').textContent = 'COO agent coordinating 5 specialist agents…';
+  toast('✦ Launching all 5 AI agents — this takes ~2 minutes', 4000);
+
+  const d = bizData;
+  const margin = d.sellPrice && d.unitCost ? Math.round((d.sellPrice - d.unitCost) / d.sellPrice * 100) : 30;
+
+  // Run agents sequentially to avoid rate limits
+  await runAgent('market',
+    `You are a Market Intelligence Agent analyzing ${d.name} (${d.industry}) in ${d.market}, planning to expand to ${d.expansion}. Product: ${d.product}. Revenue: $${d.revenue}/mo. Competitor: ${d.competitor}. Advantage: ${d.advantage}.
+
+Provide a sharp market analysis covering:
+1. Top 3 untapped customer niches for this product in ${d.expansion}
+2. Current market trends and consumer behavior shifts relevant to ${d.industry}
+3. Competitive positioning recommendations vs ${d.competitor}
+4. 2 specific markets within ${d.expansion} to enter first and why
+5. One major market threat to watch in next 12 months
+
+Be specific, data-driven, MENA-focused. No fluff.`,
+    ['Scanning market signals…', 'Analyzing competitor landscape…', 'Identifying consumer trends…', 'Mapping expansion opportunities…', 'Generating intelligence report…'],
+    [
+      {label:'Market opportunity',val:'High',color:'var(--green)',sub:d.expansion,subColor:'var(--green)'},
+      {label:'Competitor threat',val:'Medium',color:'var(--amber)',sub:'Manageable',subColor:'var(--amber)'},
+      {label:'Best entry market',val:d.expansion.split(' ')[0],color:'var(--teal)'},
+      {label:'Growth potential',val:'+40%',color:'var(--purple-light)',sub:'12-month est.'},
+    ],
+    [
+      {icon:'🎯',title:'Secondary niche: HoReCa channel',desc:'Hotel, restaurant and catering buyers in '+d.expansion+' typically pay 25-40% premium for consistent quality suppliers.',impact:'high'},
+      {icon:'📱',title:'Digital-first buyers growing fast',desc:'B2B buyers in GCC now prefer WhatsApp ordering and digital catalogs over traditional sales visits.',impact:'high'},
+      {icon:'🌍',title:'Diaspora export opportunity',desc:'Lebanese diaspora communities in UAE, KSA are premium buyers for authentic Lebanese/MENA products.',impact:'med'},
+    ]
+  );
+
+  await runAgent('supply',
+    `You are a Supply Chain Sourcing Agent auditing ${d.name}. Current supplier: ${d.supplier}. Product: ${d.product}. Unit cost: $${d.unitCost}. MOQ: ${d.moq} units/month. Market: ${d.market}.
+
+Provide actionable supply chain recommendations:
+1. 3 alternative supplier regions/countries to explore for ${d.product} (with estimated cost savings %)
+2. Specific sourcing platforms to use (Alibaba, 1688, local alternatives)
+3. How to structure a backup supplier relationship to reduce dependency risk
+4. Negotiation tactics to reduce current supplier cost by 10-20%
+5. Ideal payment terms to request (net days, LC vs TT)
+
+Be specific with numbers. Focus on ${d.industry} supply chain realities.`,
+    ['Auditing supplier matrix…', 'Cross-referencing global networks…', 'Finding alternative suppliers…', 'Running cost benchmarks…', 'Generating sourcing report…'],
+    [
+      {label:'Current unit cost',val:'$'+d.unitCost,color:'var(--amber)'},
+      {label:'Potential savings',val:'15–25%',color:'var(--green)',sub:'With alt. suppliers',subColor:'var(--green)'},
+      {label:'Supplier risk',val:d.supplier.includes(',') ? 'Low' : 'High',color:d.supplier.includes(',') ? 'var(--green)' : 'var(--red)'},
+      {label:'MOQ optimization',val:'Negotiate',color:'var(--teal)',sub:'Reduce by 30%'},
+    ],
+    [
+      {icon:'🏭',title:'Dual-source strategy',desc:'Never rely on one supplier. Identify a backup source in a different country to protect against disruptions.',impact:'high'},
+      {icon:'💲',title:'Volume consolidation discount',desc:'If ordering '+d.moq+' units monthly, negotiate a quarterly prepay for 5-10% additional discount.',impact:'high'},
+      {icon:'📋',title:'Quality certification leverage',desc:'Request ISO/quality certifications from suppliers — improves your own product credibility in '+d.expansion+'.',impact:'med'},
+    ]
+  );
+
+  await runAgent('cost',
+    `You are a Cost Benchmarking Agent for ${d.name}. Product: ${d.product}. Unit cost: $${d.unitCost}. Selling price: $${d.sellPrice}. Margin: ${margin}%. MOQ: ${d.moq}. Revenue: $${d.revenue}/mo. Biggest challenge: ${d.challenge}.
+
+Run a full margin analysis:
+1. Is ${margin}% margin healthy for ${d.industry}? What is the benchmark?
+2. Top 3 specific cost reduction opportunities with estimated $ savings
+3. Pricing strategy recommendation — can they charge more? How?
+4. Break-even analysis and path to doubling profit margin
+5. One immediate action this week to improve margins
+
+Be specific with numbers. Shadow-negotiate: what price should they be paying vs $${d.unitCost}?`,
+    ['Analyzing unit economics…', 'Benchmarking against ${d.industry} standards…', 'Running shadow negotiation simulation…', 'Calculating margin improvement paths…', 'Finalizing cost report…'],
+    [
+      {label:'Current margin',val:margin+'%',color:margin>40?'var(--green)':margin>25?'var(--amber)':'var(--red)'},
+      {label:'Industry benchmark',val:d.industry.includes('F&B')?'35-50%':d.industry.includes('Fashion')?'55-70%':'40-60%',color:'var(--teal)'},
+      {label:'Monthly profit est.',val:'$'+Math.round(d.revenue*margin/100).toLocaleString(),color:'var(--purple-light)'},
+      {label:'Improvement potential',val:'+$'+Math.round(d.revenue*0.15).toLocaleString()+'/mo',color:'var(--green)',sub:'Conservative est.',subColor:'var(--green)'},
+    ],
+    [
+      {icon:'💰',title:'Renegotiate supplier terms NOW',desc:'With '+d.moq+' units/month, you have leverage. Request a 15% volume discount citing competitive alternatives.',impact:'high'},
+      {icon:'📦',title:'Increase AOV with bundles',desc:'Bundle products to increase average order value by 30-40% without adding acquisition cost.',impact:'high'},
+      {icon:'💳',title:'Improve payment terms',desc:'Switch from upfront to Net-30 or Net-45 payment terms to improve cash flow by $'+Math.round(d.revenue*0.3).toLocaleString()+'/month.',impact:'med'},
+    ]
+  );
+
+  await runAgent('logistics',
+    `You are a Logistics & Compliance Auditor for ${d.name} (${d.industry}) currently in ${d.market}, expanding to ${d.expansion}. Product: ${d.product}.
+
+Provide a logistics and compliance roadmap:
+1. Best shipping method for ${d.product} from current supplier to ${d.market} and then to ${d.expansion}
+2. Customs duties/tariffs to expect in ${d.expansion} for ${d.industry} products
+3. Required certifications/compliance for ${d.expansion} market entry
+4. 3 logistics cost reduction opportunities
+5. Recommended freight forwarder approach (local vs international 3PL)
+
+Be specific about MENA/GCC import regulations and Lebanon customs realities.`,
+    ['Scanning shipping routes…', 'Checking customs frameworks…', 'Auditing compliance requirements…', 'Optimizing logistics costs…', 'Generating compliance report…'],
+    [
+      {label:'Shipping cost est.',val:'8-12%',color:'var(--amber)',sub:'of product value',subColor:'var(--fg3)'},
+      {label:'Customs duty',val:'5-15%',color:'var(--amber)',sub:d.expansion.split(' ')[0]},
+      {label:'Compliance risk',val:'Medium',color:'var(--amber)'},
+      {label:'Lead time',val:'21-35d',color:'var(--teal)',sub:'Sea freight'},
+    ],
+    [
+      {icon:'🚢',title:'Consolidate shipments (LCL→FCL)',desc:'If monthly volume reaches '+Math.round(d.moq*1.5)+' units, switch from LCL to FCL shipping — saves 20-30% on freight.',impact:'high'},
+      {icon:'📜',title:'UAE Free Zone registration',desc:'Register in JAFZA or DAFZA free zone in UAE to benefit from 0% corporate tax and simplified re-export to GCC.',impact:'high'},
+      {icon:'✅',title:'Get GS1 barcodes now',desc:'Required for most GCC retail chains. Apply through gs1.org — takes 2 weeks, costs ~$300/year.',impact:'med'},
+    ]
+  );
+
+  await runAgent('growth',
+    `You are a Growth Marketing Agent for ${d.name} (${d.industry}) targeting ${d.expansion}. Current channels: ${d.marketing}. Revenue: $${d.revenue}/mo. Goals: ${d.goals}.
+
+Create a complete growth playbook:
+1. Top 3 highest-ROI marketing channels for ${d.industry} in ${d.expansion} right now
+2. WhatsApp marketing strategy (sequence for new leads, re-engagement for existing customers)
+3. Instagram/social content strategy — 3 content pillars specific to ${d.product}
+4. One high-converting email/WhatsApp campaign to run this week
+5. How to reach $${Math.round(d.revenue*2).toLocaleString()}/month in revenue — specific steps
+
+Include specific ad angles, hooks, and CTAs. Arabic market context required.`,
+    ['Analyzing marketing channels…', 'Generating ad creative strategy…', 'Building WhatsApp funnel…', 'Creating content playbook…', 'Finalizing growth report…'],
+    [
+      {label:'Current revenue',val:'$'+parseInt(d.revenue).toLocaleString(),color:'var(--amber)'},
+      {label:'Target revenue',val:'$'+Math.round(d.revenue*2).toLocaleString(),color:'var(--green)',sub:'12-month goal',subColor:'var(--green)'},
+      {label:'Best channel',val:d.marketing.includes('Instagram')?'Instagram':'WhatsApp',color:'var(--teal)'},
+      {label:'CAC estimate',val:'$12-28',color:'var(--purple-light)',sub:d.expansion.split(' ')[0]+' market'},
+    ],
+    [
+      {icon:'📱',title:'WhatsApp broadcast → 30% reorder rate',desc:'Set up a 3-message WhatsApp sequence: Day 1 (value), Day 7 (social proof), Day 14 (offer). Expect 25-35% reorder rate.',impact:'high'},
+      {icon:'🎯',title:'Instagram Reels — behind the scenes content',desc:'Show sourcing story, quality process, team — builds trust in GCC market. Budget $500/mo for boosting top posts.',impact:'high'},
+      {icon:'🤝',title:'B2B WhatsApp outreach to restaurants',desc:'Build a list of 200 target restaurants/hotels in '+d.expansion.split(' ')[0]+'. Personal WhatsApp outreach converts at 8-12%.',impact:'med'},
+    ]
+  );
+}
+
+function buildReport() {
+  const d = bizData;
+  const margin = d.sellPrice && d.unitCost ? Math.round((d.sellPrice - d.unitCost) / d.sellPrice * 100) : 30;
+  const date = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'long',year:'numeric'});
+
+  document.getElementById('report-subtitle').textContent = `Generated ${date} for ${d.name} · 5 agents · COO Analysis`;
+
+  document.getElementById('report-body').innerHTML = `
+    <div style="background:linear-gradient(135deg,var(--purple-bg),var(--bg3));border:1px solid rgba(124,111,247,0.2);border-radius:16px;padding:24px;margin-bottom:24px">
+      <div style="font-size:12px;color:var(--purple-light);font-weight:500;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em">COO Executive Summary — ${d.name}</div>
+      <div style="font-size:14px;color:var(--fg2);line-height:1.8">
+        <b style="color:var(--fg)">${d.name}</b> operates in ${d.industry} with monthly revenue of <b style="color:var(--teal)">$${parseInt(d.revenue).toLocaleString()}</b> and a <b style="color:${margin>40?'var(--green)':'var(--amber)'}">${margin}% gross margin</b>. 
+        The 5-agent analysis identified <b style="color:var(--fg)">immediate opportunities</b> in supply chain renegotiation (est. 15-25% cost reduction), 
+        market expansion into ${d.expansion}, and growth marketing automation. 
+        Conservative 12-month revenue target: <b style="color:var(--green)">$${Math.round(d.revenue*2).toLocaleString()}/month</b>.
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px">
+      ${[
+        ['🌍','Market','High opportunity in '+d.expansion.split(' ')[0],'var(--blue)'],
+        ['🔗','Supply','15-25% cost reduction possible','var(--teal)'],
+        ['💰','Margins',margin+'% → target '+(margin+10)+'%+','var(--amber)'],
+        ['🚢','Logistics','Consolidate & free zone','var(--green)'],
+        ['🚀','Growth','2x revenue roadmap ready','var(--pink)'],
+      ].map(([icon,label,val,color])=>`
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center">
+          <div style="font-size:24px;margin-bottom:6px">${icon}</div>
+          <div style="font-size:11px;color:var(--fg3);margin-bottom:3px">${label}</div>
+          <div style="font-size:12px;font-weight:500;color:${color}">${val}</div>
+        </div>`).join('')}
+    </div>
+
+    ${['market','supply','cost','logistics','growth'].map((id,i)=>`
+      <div class="report-section">
+        <h3>${['🌍 Market Intelligence','🔗 Supply Chain','💰 Cost Benchmarking','🚢 Logistics & Compliance','🚀 Growth Marketing'][i]}</h3>
+        <div style="font-size:13px;line-height:1.8;color:var(--fg2);white-space:pre-wrap;background:var(--bg2);border-radius:var(--r);padding:16px;border:1px solid var(--border)">${results[id] || 'Agent analysis pending…'}</div>
+      </div>`).join('')}
+
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:20px;margin-top:8px">
+      <h3 style="font-size:15px;font-weight:600;margin-bottom:14px">⚡ Immediate action plan — next 7 days</h3>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${[
+          ['Day 1-2','Email current supplier requesting 15% volume discount citing competitive quotes'],
+          ['Day 2-3','Register on Alibaba.com and request 3 quotes for your product category'],
+          ['Day 3-4','Set up WhatsApp Business broadcast list — send value content to existing customers'],
+          ['Day 5-6','Research UAE free zone registration requirements (JAFZA / DAFZA)'],
+          ['Day 7','Create Instagram Reel showing your product sourcing/quality story'],
+        ].map(([day,action])=>`
+          <div style="display:flex;gap:12px;padding:10px 12px;background:var(--bg3);border-radius:var(--r);font-size:13px">
+            <span style="color:var(--purple-light);font-weight:500;flex-shrink:0;min-width:70px">${day}</span>
+            <span style="color:var(--fg2)">${action}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function copyReport(){
+  const text = document.getElementById('report-body').innerText;
+  navigator.clipboard.writeText(text).then(() => toast('✓ Report copied to clipboard!'));
+}
+</script>
+</body>
+</html>
